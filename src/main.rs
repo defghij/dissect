@@ -1,8 +1,5 @@
 extern crate byteorder;
 
-//TODO REMOVE THIS MACRO WHEN FINISHED
-#[allow(dead_code)]
-
 mod elf;
 mod utility_functions;
 
@@ -14,6 +11,7 @@ use crate::elf::structures::*;
 use utility_functions::arrays::*;
 
 
+//TODO REMOVE THIS MACRO WHEN FINISHED
 #[allow(dead_code)]
 fn main() {
   let args = Cli::from_args();
@@ -32,7 +30,6 @@ fn main() {
       std::process::exit(1);
   }
 
-  
   //TODO Account for endianness and scope (e_header dies after conditional)
   if e_ident.ei_class == 1 {
       let e_header = ELFHeader32::new(&content[16 .. 52], e_ident);
