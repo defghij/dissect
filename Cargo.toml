@@ -1,0 +1,19 @@
+[package]
+name = "dissect"
+version = "0.1.0"
+authors = ["defghij"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+structopt = "0.2.10"
+byteorder = "1"
+
+[structs] 
+name = "structures"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dissect"
+path = "src/main.rs"

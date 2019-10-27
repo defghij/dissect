@@ -1,0 +1,1 @@
+{"rustc":3116941781746069937,"features":"[\"clap\", \"default\"]","target":5954640388368955766,"profile":9935990280773120926,"path":1621828158988052530,"deps":[["clap v2.33.0","clap",7135411946558854043],["structopt-derive v0.2.18","structopt_derive",12400860939328695106]],"local":[{"Precalculated":"0.2.18"}],"rustflags":[],"metadata":5680142376242065385}
