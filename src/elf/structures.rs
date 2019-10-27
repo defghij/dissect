@@ -6,7 +6,7 @@ use crate::utility_functions::arrays::*;
 /* Struct that contains all the Elf sub-structures. */
 
 pub struct EIdentStruct{
-  pub magic_number: [u8; 4],    // Magic number
+  pub magic_number: [u8; 4],      // Magic number
   pub ei_class:      u8,          // File class
   pub ei_data:       u8,          // Encoding of data in object file sections. 
   pub ei_version:    u8,          // ELF header version number
@@ -48,24 +48,24 @@ impl EIdentStruct {
             string_out.push_str( &(format!("{}",self.magic_number[byte] as char)).to_string());
         }
 
-        string_out.push_str( &(format!("\nclass:       ")));     // File class
+        string_out.push_str( &(format!("\nclass:       ")));
         match self.ei_class {                    
             1 => string_out.push_str( &(format!("32bit\n"))),
             2 => string_out.push_str( &(format!("64bit\n"))),
             _ => return Err("Failed to find valid Class entry."),
         }
 
-        string_out.push_str( &(format!("encoding:    ")));    // Data encoding
+        string_out.push_str( &(format!("encoding:    ")));
         match self.ei_data {
             1 => string_out.push_str( &format!("little endian\n")),
             2 => string_out.push_str( &format!("big endian\n")),
             _ => return Err("Failed to find valid Data Format entry."),
         };
 
-        string_out.push_str( &(format!("version:     ")));     // ELF version
+        string_out.push_str( &(format!("version:     ")));
         string_out.push_str( &(format!("{}\n", self.ei_version)));
 
-        string_out.push_str( &(format!("OS ABI:      ")));      // OS/ABI 
+        string_out.push_str( &(format!("OS ABI:      ")));
         match self.ei_osabi {
             0  => string_out.push_str( &(format!("Unix System V\n"))),
             1  => string_out.push_str( &(format!("HP-UX\n"))),
