@@ -20,22 +20,22 @@ pub enum ELFMAG_Byte {
     ELFMAG3	= 0x46,		/* Magic number byte 3 */
 }
 
-
-
 pub enum Elf {
     Elf32,
     Elf64,
 }
 
 pub trait ELF {}
+pub trait Selectable<T32,T64> {
+    fn is_elf32_type(&self) -> bool;
+    fn is_elf64_type(&self) -> bool;
+    fn get_elf32_value(&self) -> Option<T32>;
+    fn get_elf64_value(&self) -> Option<T64>;
+}
 
-pub enum ElfTypes {
-    Half,
-    Word,
-    Addr,
-    Offset,
-} impl ELF for ElfTypes{}
-
+//=================
+// Structure types =
+//===================
 pub enum Elf32Types {
     Elf32Half,
     Elf32Word,
@@ -50,31 +50,143 @@ pub enum Elf64Types {
     Elf64Off
 } impl ELF for Elf64Types{}
 
+//=======================
+// Structure Field Types =
+//=========================
+pub enum ElfTypes {
+    Half,
+    Word,
+    Addr,
+    Offset,
+} impl ELF for ElfTypes{}
+
 #[derive(Debug, Copy, Clone)]
 pub enum Half {
     Elf32(Elf32Half),
     Elf64(Elf64Half)
 }
+impl Selectable<Elf32Half, Elf64Half> for Half {
+    fn is_elf32_type(&self) -> bool{
+        match self {
+            Half::Elf32(_) => true,
+            _ => false,
+        }
+    }
+    fn is_elf64_type(&self) -> bool{
+        match self {
+            Half::Elf64(_) => true,
+            _ => false,
+        }
+    }
+    fn get_elf32_value(&self) -> Option<Elf32Half>{
+        match self {
+            Half::Elf32(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+    fn get_elf64_value(&self) -> Option<Elf64Half>{
+        match self {
+            Half::Elf64(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum Word {
     Elf32(Elf32Word),
     Elf64(Elf64Word)
 }
+impl Selectable<Elf32Word, Elf64Word> for Word {
+    fn is_elf32_type(&self) -> bool{
+        match self {
+            Word::Elf32(_) => true,
+            _ => false,
+        }
+    }
+    fn is_elf64_type(&self) -> bool{
+        match self {
+            Word::Elf64(_) => true,
+            _ => false,
+        }
+    }
+    fn get_elf32_value(&self) -> Option<Elf32Word>{
+        match self {
+            Word::Elf32(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+    fn get_elf64_value(&self) -> Option<Elf64Word>{
+        match self {
+            Word::Elf64(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum Addr {
     Elf32(Elf32Addr),
     Elf64(Elf64Addr),
 }
+impl Selectable<Elf32Addr, Elf64Addr> for Addr {
+    fn is_elf32_type(&self) -> bool{
+        match self {
+            Addr::Elf32(_) => true,
+            _ => false,
+        }
+    }
+    fn is_elf64_type(&self) -> bool{
+        match self {
+            Addr::Elf64(_) => true,
+            _ => false,
+        }
+    }
+    fn get_elf32_value(&self) -> Option<Elf32Addr>{
+        match self {
+            Addr::Elf32(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+    fn get_elf64_value(&self) -> Option<Elf64Addr>{
+        match self {
+            Addr::Elf64(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum Offset {
     Elf32(Elf32Off),
     Elf64(Elf64Off),
 }
-
-
-
-
-
+impl Selectable<Elf32Off, Elf64Off> for Offset {
+    fn is_elf32_type(&self) -> bool{
+        match self {
+            Offset::Elf32(_) => true,
+            _ => false,
+        }
+    }
+    fn is_elf64_type(&self) -> bool{
+        match self {
+            Offset::Elf64(_) => true,
+            _ => false,
+        }
+    }
+    fn get_elf32_value(&self) -> Option<Elf32Off>{
+        match self {
+            Offset::Elf32(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+    fn get_elf64_value(&self) -> Option<Elf64Off>{
+        match self {
+            Offset::Elf64(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+}
 
 
 
