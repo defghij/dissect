@@ -1,20 +1,84 @@
+use crate::elf::structures::*;
+use crate::elf::types::*;
+
 
 /* Fields in the e_ident array.  The EI_* macros are indices into the
    array.  The macros under each EI_* macro are the values the byte
    may have.  */
+#[allow(non_camel_case_types)]
 pub enum ELFMAG_Bit {
     EI_MAG0	= 0,		/* File identification byte 0 index */
     EI_MAG1	= 1,		/* File identification byte 1 index */
     EI_MAG2	= 2,		/* File identification byte 2 index */
     EI_MAG3	= 3,		/* File identification byte 3 index */
 }
-
+#[allow(non_camel_case_types)]
 pub enum ELFMAG_Byte {
     ELFMAG0 = 0x7f,  	/* Magic number byte 0 */
     ELFMAG1	= 0x45,		/* Magic number byte 1 */
     ELFMAG2	= 0x4C,		/* Magic number byte 2 */
     ELFMAG3	= 0x46,		/* Magic number byte 3 */
 }
+
+
+
+pub enum Elf {
+    Elf32,
+    Elf64,
+}
+
+pub trait ELF {}
+
+pub enum ElfTypes {
+    Half,
+    Word,
+    Addr,
+    Offset,
+} impl ELF for ElfTypes{}
+
+pub enum Elf32Types {
+    Elf32Half,
+    Elf32Word,
+    Elf32Addr,
+    Elf32Off,
+} impl ELF for Elf32Types{}
+
+pub enum Elf64Types {
+    Elf64Half,
+    Elf64Word,
+    Elf64Addr,
+    Elf64Off
+} impl ELF for Elf64Types{}
+
+#[derive(Debug, Copy, Clone)]
+pub enum Half {
+    Elf32(Elf32Half),
+    Elf64(Elf64Half)
+}
+#[derive(Debug, Copy, Clone)]
+pub enum Word {
+    Elf32(Elf32Word),
+    Elf64(Elf64Word)
+}
+#[derive(Debug, Copy, Clone)]
+pub enum Addr {
+    Elf32(Elf32Addr),
+    Elf64(Elf64Addr),
+}
+#[derive(Debug, Copy, Clone)]
+pub enum Offset {
+    Elf32(Elf32Off),
+    Elf64(Elf64Off),
+}
+
+
+
+
+
+
+
+
+
 /*
 #define EI_CLASS	4		/* File class byte index */
 #define ELFCLASSNONE	0		/* Invalid class */

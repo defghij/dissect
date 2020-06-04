@@ -43,50 +43,68 @@ impl EIdentStruct {
     }
     pub fn fmt_cli_out(&self) -> Result<String, &str>{
         let mut string_out = String::new();
-        string_out.push_str( &(format!("type:        ")));     // Start building up string to be printed out
-        for byte in 0..4 {                                     // Get magic header
-            string_out.push_str( &(format!("{}",self.magic_number[byte] as char)).to_string());
-        }
-
-        string_out.push_str( &(format!("\nclass:       ")));
-        match self.ei_class {                    
-            1 => string_out.push_str( &(format!("32bit\n"))),
-            2 => string_out.push_str( &(format!("64bit\n"))),
-            _ => return Err("Failed to find valid Class entry."),
-        }
-
-        string_out.push_str( &(format!("encoding:    ")));
-        match self.ei_data {
-            1 => string_out.push_str( &format!("little endian\n")),
-            2 => string_out.push_str( &format!("big endian\n")),
-            _ => return Err("Failed to find valid Data Format entry."),
-        };
-
-        string_out.push_str( &(format!("version:     ")));
-        string_out.push_str( &(format!("{}\n", self.ei_version)));
-
-        string_out.push_str( &(format!("OS ABI:      ")));
-        match self.ei_osabi {
-            0  => string_out.push_str( &(format!("Unix System V\n"))),
-            1  => string_out.push_str( &(format!("HP-UX\n"))),
-            2  => string_out.push_str( &(format!("NetBSD\n"))),
-            3  => string_out.push_str( &(format!("Linux\n"))),
-            6  => string_out.push_str( &(format!("Solaris\n"))),
-            7  => string_out.push_str( &(format!("IBM AIX\n"))),
-            8  => string_out.push_str( &(format!("IRIX\n"))),
-            9  => string_out.push_str( &(format!("FreeBSD\n"))),
-            10 => string_out.push_str( &(format!("TRU64 Unix\n"))),
-            11 => string_out.push_str( &(format!("Novel Modest\n"))),
-            12 => string_out.push_str( &(format!("OpenBSD\n"))),
-            64...255 => string_out.push_str( &(format!("Architecture Specific\n"))),
-            _ => return Err("Failed to find valid OS/ABI entry."),
-        }
-  
-        string_out.push_str( &(format!("ABI version: {}\n", self.ei_abiversion)));
+        string_out.push_str( &(format!("\tbinary:      {}\n", self.get_type())));
+        string_out.push_str( &(format!("\tclass:       {}\n", self.get_ei_class())));
+        string_out.push_str( &(format!("\tencoding:    {}\n", self.get_ei_encoding())));
+        string_out.push_str( &(format!("\tversion:     {}\n", self.get_ei_version())));
+        string_out.push_str( &(format!("\tOS ABI:      {}\n", self.get_ei_osabi())));
+        string_out.push_str( &(format!("\tABI version: {}\n", self.get_ei_abiversion())));
         return Ok(string_out);
+    }
+    //Private helpers for fmt_cli_out
+    fn get_type(&self) -> String{
+        let mut type_string = String::new();
+        for byte in 0..4 {                                     // Get magic header
+            type_string.push_str(&(format!("{}",self.magic_number[byte] as char)).to_string());
+        }
+        return type_string;
+    }
+    fn get_ei_class(&self) -> String {
+        match self.ei_class as u16 {                    
+            ELFCLASS32 => return String::from("32bit"),
+            ELFCLASS64 => return String::from("64bit"),
+            _ => return String::from("Invalid EI Class"),
+        }
+    }
+    fn get_ei_encoding(&self) -> String {
+        match self.ei_data {
+            1 => return String::from("little endian"),
+            2 => return String::from("big endian"),
+            _ => return String::from("Failed to find valid Data Format entry."),
+        };
+    }
+    fn get_ei_version(&self) -> String {
+        match self.ei_version{
+            1 => return String::from("Current Version"),
+            _ => return String::from("Invalid Version"),
+        }
+    }
+    fn get_ei_osabi(&self) -> String {
+        match self.ei_osabi {
+            0  => return String::from("Unix System V"),
+            1  => return String::from("HP-UX"),
+            2  => return String::from("NetBSD"),
+            3  => return String::from("Linux"),
+            6  => return String::from("Solaris"),
+            7  => return String::from("IBM AIX"),
+            8  => return String::from("IRIX"),
+            9  => return String::from("FreeBSD"),
+            10 => return String::from("TRU64 Unix"),
+            11 => return String::from("Novel Modest"),
+            12 => return String::from("OpenBSD"),
+            64...255 => return String::from("Architecture Specific"),
+            _ => return String::from("Failed to find valid OS/ABI entry."),
+        } 
+    }
+    fn get_ei_abiversion(&self) -> String {
+        match self.ei_abiversion{
+            0 => return String::from("Unspecified"),
+            _ => return String::from("Other"),
+        }
     }
 }
 
+type ELF32 = ELFHeader32;
 pub struct ELFHeader32{
   pub e_ident:     EIdentStruct,    // Magic Number and other useful information
   pub e_type:      Elf32Half,       // Object file type
@@ -105,7 +123,6 @@ pub struct ELFHeader32{
 }
 impl ELFHeader32{
     pub fn new(bytes: &[u8], e_ident: EIdentStruct) -> ELFHeader32 {
-
         let e_header = ELFHeader32 {e_ident:     e_ident,
                                     e_type:      vec_slice_to_u16_array(&bytes[0 .. 2]).unwrap(),
                                     e_machine:   vec_slice_to_u16_array(&bytes[2 .. 4]).unwrap(),
@@ -136,17 +153,27 @@ impl ELFHeader32{
          */
 
         string_out.push_str( &self.e_ident.fmt_cli_out().unwrap());
-        string_out.push_str( &( format!("eident size: {:X}\n", self.e_ident.ei_nident)));
-        string_out.push_str( &(format!("type:      {:X}\n",   self.e_type)));
-        string_out.push_str( &(format!("e_machine: {:X}\n",   self.e_machine.swap_bytes())));
-        string_out.push_str( &(format!("e_version: {:X}\n",   self.e_version.swap_bytes())));
-        string_out.push_str( &(format!("e_entry:   {:X}\n",   self.e_entry.swap_bytes())));
-        string_out.push_str( &(format!("e_phoff:   {}\n",     self.e_phoff.swap_bytes())));
-        string_out.push_str( &(format!("e_shstridx {}\n",     self.e_shstrndx.swap_bytes())));
+        string_out.push_str( &(format!("\teident size: {:X}\n", self.e_ident.ei_nident)));
+        string_out.push_str( &(format!("\ttype:      {:X}\n",   self.e_type)));
+        string_out.push_str( &(format!("\te_machine: {}\n", self.get_e_machine())));
+        string_out.push_str( &(format!("\te_version: {:X}\n",   self.e_version.swap_bytes())));
+        string_out.push_str( &(format!("\te_entry:   {:X}\n",   self.e_entry.swap_bytes())));
+        string_out.push_str( &(format!("\te_phoff:   {}\n",     self.e_phoff.swap_bytes())));
+        string_out.push_str( &(format!("\te_shstridx {}\n",     self.e_shstrndx.swap_bytes())));
         return string_out;
+    }
+    fn get_e_machine(&self) -> String{
+        match self.e_machine.swap_bytes(){
+            0 => return String::from("No Machine"),
+            1 => return String::from("AT&T WE 32100"),
+            2 => return String::from("SPARC"),
+            3 => return String::from("Intel 80386"),
+            _ => return String::from("To be implemented"),
+        }
     }
 }
 
+type ELF64 = ELFHeader64;
 pub struct ELFHeader64{
   pub e_ident:    EIdentStruct,     // Magic Number and other useful information
   pub e_type:      Elf64Half,       // Object file type
