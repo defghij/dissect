@@ -15,8 +15,11 @@ pub type Elf64Half = u16;
 /* Types for signed and unsigend 32-bit quantities. */
 pub type Elf32Word  = u32;
 pub type Elf32Sword = i32;
+pub type Elf32SWord = Elf32Sword; // Alias to prevent Swords in the type namespace
 pub type Elf64Word  = u32;
 pub type Elf64Sword = i32;
+pub type Elf64SWord = Elf64Sword; // Alias to prevent Swords in the type namespace
+
 
 /* Types for signed and unsigned 64-bit quantities. */
 pub type Elf32Xword  = u64;
@@ -133,6 +136,7 @@ pub const EM_ME16:          u16 = 59;  // ME16 processor
 pub const EM_ST100:         u16 = 60;  // ST100 processor
 pub const EM_TINYJ:         u16 = 61;  // Logic Corp. Tinyj emb.fam
 pub const EM_X86_64:        u16 = 62;  // x86-64 architecture
+pub const EM_AMD64:         u16 = 62;  // AMD 64
 pub const EM_PDSP:          u16 = 63;  // DSP Processor
 pub const EM_PDP10:         u16 = 64;  // PDP-10
 pub const EM_PDP11:         u16 = 65;  // PDP-11

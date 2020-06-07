@@ -39,6 +39,7 @@ pub trait Selectable<T32,T64> {
 pub enum Elf32Types {
     Elf32Half,
     Elf32Word,
+    Elf32SWord,
     Elf32Addr,
     Elf32Off,
 } impl ELF for Elf32Types{}
@@ -46,6 +47,7 @@ pub enum Elf32Types {
 pub enum Elf64Types {
     Elf64Half,
     Elf64Word,
+    Elf64SWord,
     Elf64Addr,
     Elf64Off
 } impl ELF for Elf64Types{}
@@ -56,6 +58,7 @@ pub enum Elf64Types {
 pub enum ElfTypes {
     Half,
     Word,
+    SWord,
     Addr,
     Offset,
 } impl ELF for ElfTypes{}
@@ -119,6 +122,38 @@ impl Selectable<Elf32Word, Elf64Word> for Word {
     fn get_elf64_value(&self) -> Option<Elf64Word>{
         match self {
             Word::Elf64(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum SWord {
+    Elf32(Elf32SWord),
+    Elf64(Elf64SWord)
+}
+impl Selectable<Elf32SWord, Elf64SWord> for SWord {
+    fn is_elf32_type(&self) -> bool{
+        match self {
+            SWord::Elf32(_) => true,
+            _ => false,
+        }
+    }
+    fn is_elf64_type(&self) -> bool{
+        match self {
+            SWord::Elf64(_) => true,
+            _ => false,
+        }
+    }
+    fn get_elf32_value(&self) -> Option<Elf32SWord>{
+        match self {
+            SWord::Elf32(v) => Some(v.to_owned()),
+            _ => None,
+        }
+    }
+    fn get_elf64_value(&self) -> Option<Elf64SWord>{
+        match self {
+            SWord::Elf64(v) => Some(v.to_owned()),
             _ => None,
         }
     }

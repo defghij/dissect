@@ -28,6 +28,7 @@ fn main() {
 
   if content.len() < EIdent::EIdent_Len {
       println!("Not enough data to populate EIdent portion of ELF Header");
+      println!("File is not large enough to be an ELF binary.");
       std::process::exit(1);
   }
   let e_ident = EIdent::new(&content[0 .. 16]);
@@ -43,7 +44,7 @@ fn main() {
       print!("{}", header);
   }
   else {
-      let header: Header<Elf64> = Header::<Elf64>::new(&content[0 .. 66]);
+      let header: Header<Elf64> = Header::<Elf64>::new(&content[0 ..=Header::<Elf64>::HEADER_LEN]);
       print!("{}", header);
   }
 }

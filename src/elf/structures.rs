@@ -15,6 +15,7 @@ trait Validate {
 }
 trait GetHeaderValues {
     fn get_e_type_value(&self) ->Half;
+    fn get_e_type_string(&self) -> String;
     fn get_e_machine_string(&self) -> String;
     fn get_e_machine_value(&self) -> Half;
     fn get_e_version_value(&self) -> Word;
@@ -117,21 +118,21 @@ impl EIdent {
         let mut ei_pad_array: [u8; 6] = Default::default();
         ei_pad_array.copy_from_slice(&bytes[9 .. 15]);
 
-        let e_ident = EIdent { magic_number:  m_array,
-                               ei_class:      bytes[4],
-                               ei_data:       bytes[5],
-                               ei_version:    bytes[6],
-                               ei_osabi:      bytes[7],
-                               ei_abiversion: bytes[8],
-                               ei_pad:        ei_pad_array,
-                               ei_nident:     bytes[15],
-                              };
-        return e_ident;
+        EIdent { magic_number:  m_array,
+                 ei_class:      bytes[4],
+                 ei_data:       bytes[5],
+                 ei_version:    bytes[6],
+                 ei_osabi:      bytes[7],
+                 ei_abiversion: bytes[8],
+                 ei_pad:        ei_pad_array,
+                 ei_nident:     bytes[15],
+                }
+
     }
     pub fn is_elf(&self) -> bool{
         match self.magic_number {
-            [0x7F,0x45, 0x4C, 0x46] => return true,
-            _                       => return false,
+            [0x7F,0x45, 0x4C, 0x46] => true,
+            _                       => false,
         }
     }
     pub fn is_32bit(&self) -> bool {
@@ -141,31 +142,31 @@ impl EIdent {
         self.ei_class == 0
     }
     //Private helpers for fmt::Display to convert values to meaningful strings.
-    fn get_type_string(&self) -> String{
+    fn get_magic_string(&self) -> String{
         let mut type_string = String::new();
         for byte in 0..4 {                                     // Get magic header
             type_string.push_str(&(format!("{}",self.magic_number[byte] as char)).to_string());
         }
-        return type_string;
+        type_string
     }
     fn get_ei_class_string(&self) -> String {
         match self.ei_class as u16 {
-            ELFCLASS32 => return String::from("32bit"),
-            ELFCLASS64 => return String::from("64bit"),
-            _ => return String::from("Invalid EI Class"),
+            ELFCLASS32 => String::from("32bit"),
+            ELFCLASS64 => String::from("64bit"),
+            _ => String::from("Invalid EI Class"),
         }
     }
     fn get_ei_encoding_string(&self) -> String {
         match self.ei_data {
-            1 => return String::from("little endian"),
-            2 => return String::from("big endian"),
-            _ => return String::from("Failed to find valid Data Format entry."),
-        };
+            1 => String::from("little endian"),
+            2 => String::from("big endian"),
+            _ => String::from("Failed to find valid Data Format entry."),
+        }
     }
     fn get_ei_version_string(&self) -> String {
         match self.ei_version{
-            1 => return String::from("Current ELF Version"),
-            _ => return String::from("Invalid Version"),
+            1 => String::from("Current ELF Version"),
+            _ => String::from("Invalid Version"),
         }
     }
     fn get_ei_osabi_string(&self) -> String {
@@ -187,8 +188,8 @@ impl EIdent {
     }
     fn get_ei_abiversion_string(&self) -> String {
         match self.ei_abiversion {
-            0 => return String::from("Unspecified"),
-            _ => return String::from("Other"),
+            0 => String::from("Unspecified"),
+            _ => String::from("Other"),
         }
     }
 }
@@ -204,7 +205,7 @@ impl fmt::Display for EIdent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut output_string: String = String::new();
         output_string.push_str(&format!("\tMagic Numbers:                     {}\n",
-            self.get_type_string()));
+            self.get_magic_string()));
         output_string.push_str(&format!("\tClass:                             {}\n",
             self.get_ei_class_string()));
         output_string.push_str(&format!("\tEncoding:                          {}\n",
@@ -279,22 +280,41 @@ impl GetHeaderValues for Header<Elf32> {
     fn get_e_type_value(&self) -> Half {
         self.e_type
     }
-    fn get_e_machine_string(&self) -> String{
-        let e_machine = match self.e_machine {
-            Half::Elf32(e_machine) => e_machine,
-            Half::Elf64(e_machine) => e_machine,
-        };
-        match e_machine.swap_bytes(){
-            0 => return String::from("No Machine"),
-            1 => return String::from("AT&T WE 32100"),
-            2 => return String::from("SPARC"),
-            3 => return String::from("Intel 80386"),
-            _ => return String::from("To be implemented"),
+    fn get_e_type_string(&self) -> String {
+        match self.get_e_type_value()
+                  .get_elf32_value()
+                  .unwrap()
+                  .swap_bytes() {
+            ET_NONE   => String::from("No file type"),
+            ET_REL    => String::from("Relocatable file"),
+            ET_EXEC   => String::from("Executable file"),
+            ET_DYN    => String::from("Shared object file"),
+            ET_CORE   => String::from("Core file"),
+            ET_LOOS   |
+            ET_HIOS   => String::from("Operating system specific"),
+            ET_LOPROC |
+            ET_HIPROC => String::from("Processor specific"),
+            _         => String::from("Invalid value"),
         }
     }
     fn get_e_machine_value(&self) -> Half {
         self.e_machine
     }
+    fn get_e_machine_string(&self) -> String {
+        match self.get_e_machine_value()
+                  .get_elf32_value()
+                  .unwrap()
+                  .swap_bytes() {
+            EM_NONE        => String::from("No Machine"),
+            EM_SPARC       => String::from("SPARC"),
+            EM_386         => String::from("Intel 80386"),
+            EM_SPARC32PLUS => String::from("Sun SPARC 32+"),
+            EM_SPARCV9     => String::from("SPARC V9"),
+            EM_AMD6        => String::from("AMD 64"),
+            _              => String::from("To be implemented"),
+        }
+    }
+
     fn get_e_version_value(&self) -> Word {
         self.e_version
     }
@@ -323,7 +343,7 @@ impl GetHeaderValues for Header<Elf32> {
         self.e_shentsize
     }
     fn get_e_shnum_value(&self) -> Half {
-        self.e_shentsize
+        self.e_shnum
     }
     fn get_e_shstrndx_value(&self) -> Half {
         self.e_shstrndx
@@ -332,33 +352,56 @@ impl GetHeaderValues for Header<Elf32> {
 impl fmt::Display for Header<Elf32> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut output_string: String = String::new();
+
+        output_string.push_str("  Header:\n");
+
         output_string.push_str(&format!("{}",&self.e_ident));
-        output_string.push_str(&format!("\tType:                              {:X}\n",
-            self.get_e_type_value()
-                .get_elf32_value()
-                .unwrap()
-                .swap_bytes()
-        ));
+
+        output_string.push_str(&format!("\tType:                              {}\n",
+            self.get_e_type_string()));
+
         output_string.push_str(&format!("\tMachine:                           {}\n",
             self.get_e_machine_string()));
+
         output_string.push_str(&format!("\tVersion:                           {:X}\n",
             self.get_e_version_value()
                 .get_elf32_value()
                 .unwrap()
                 .swap_bytes()
             ));
+
         output_string.push_str(&format!("\tEntry point address:               0x{:X}\n",
             self.get_e_entry_value()
                 .get_elf32_value()
                 .unwrap()
                 .swap_bytes()
             ));
-        output_string.push_str(&format!("\tStart of program headers:          {}\n",
+
+        output_string.push_str(&format!("\tStart of program headers:          {} (bytes into file)\n",
             self.get_e_phoff_value()
                 .get_elf32_value()
                 .unwrap()
                 .swap_bytes()
             ));
+
+        output_string.push_str(&format!("\tStart of section headers:          {} (bytes into file)\n",
+            self.get_e_shoff_value().get_elf32_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tSize of this header:               {} (bytes)\n",
+            self.get_e_ehsize_value().get_elf32_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tSize of program headers:           {} (bytes)\n",
+            self.get_e_phentsize_value().get_elf32_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tNumber of program headers:         {}\n",
+            self.get_e_phnum_value().get_elf32_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tSize of section headers:           {} (bytes)\n",
+            self.get_e_shentsize_value().get_elf32_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tNumber of section headers:         {}\n",
+            self.get_e_shnum_value().get_elf32_value().unwrap().swap_bytes()));
+
         output_string.push_str(&format!("\tSection header string table index: {}\n",
             self.get_e_shstrndx_value()
                 .get_elf32_value()
@@ -373,7 +416,7 @@ impl fmt::Display for Header<Elf32> {
 impl Header<Elf64> {
     pub const HEADER_START: usize = 0;
     pub const HEADER_END:   usize = 64;
-    pub const HEADER_LEN:   usize = (Header::<Elf32>::HEADER_END - Header::<Elf32>::HEADER_START);
+    pub const HEADER_LEN:   usize = (Header::<Elf64>::HEADER_END - Header::<Elf64>::HEADER_START);
 
     pub fn new(bytes: &[u8]) -> Header<Elf64> {
         let e_header = Header {e_ident:      EIdent::new(&bytes[0 .. 16]),
@@ -428,22 +471,41 @@ impl GetHeaderValues for Header<Elf64> {
     fn get_e_type_value(&self) -> Half {
         self.e_type
     }
-    fn get_e_machine_string(&self) -> String{
-        let e_machine = match self.e_machine {
-            Half::Elf32(e_machine) => e_machine,
-            Half::Elf64(e_machine) => e_machine,
-        };
-        match e_machine.swap_bytes(){
-            0 => return String::from("No Machine"),
-            1 => return String::from("AT&T WE 32100"),
-            2 => return String::from("SPARC"),
-            3 => return String::from("Intel 80386"),
-            _ => return String::from("To be implemented"),
+    fn get_e_type_string(&self) -> String {
+        match self.get_e_type_value()
+                  .get_elf64_value()
+                  .unwrap()
+                  .swap_bytes() {
+            ET_NONE   => String::from("No file type"),
+            ET_REL    => String::from("Relocatable file"),
+            ET_EXEC   => String::from("Executable file"),
+            ET_DYN    => String::from("Shared object file"),
+            ET_CORE   => String::from("Core file"),
+            ET_LOOS   |
+            ET_HIOS   => String::from("Operating system specific"),
+            ET_LOPROC |
+            ET_HIPROC => String::from("Processor specific"),
+            _         => String::from("Invalid value"),
         }
     }
     fn get_e_machine_value(&self) -> Half {
         self.e_machine
     }
+    fn get_e_machine_string(&self) -> String {
+        match self.get_e_machine_value()
+                  .get_elf64_value()
+                  .unwrap()
+                  .swap_bytes() {
+            EM_NONE        => String::from("No Machine"),
+            EM_SPARC       => String::from("SPARC"),
+            EM_386         => String::from("Intel 80386"),
+            EM_SPARC32PLUS => String::from("Sun SPARC 32+"),
+            EM_SPARCV9     => String::from("SPARC V9"),
+            EM_AMD6        => String::from("AMD 64"),
+            _              => String::from("To be implemented"),
+        }
+    }
+
     fn get_e_version_value(&self) -> Word {
         self.e_version
     }
@@ -472,7 +534,7 @@ impl GetHeaderValues for Header<Elf64> {
         self.e_shentsize
     }
     fn get_e_shnum_value(&self) -> Half {
-        self.e_shentsize
+        self.e_shnum
     }
     fn get_e_shstrndx_value(&self) -> Half {
         self.e_shstrndx
@@ -481,33 +543,56 @@ impl GetHeaderValues for Header<Elf64> {
 impl fmt::Display for Header<Elf64> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut output_string: String = String::new();
+
+        output_string.push_str("  Header:\n");
+
         output_string.push_str(&format!("{}",&self.e_ident));
-        output_string.push_str(&format!("\tType:                              {:X}\n",
-            self.get_e_type_value()
-                .get_elf64_value()
-                .unwrap()
-                .swap_bytes()
-        ));
+
+        output_string.push_str(&format!("\tType:                              {}\n",
+            self.get_e_type_string()));
+
         output_string.push_str(&format!("\tMachine:                           {}\n",
             self.get_e_machine_string()));
+
         output_string.push_str(&format!("\tVersion:                           {:X}\n",
             self.get_e_version_value()
                 .get_elf64_value()
                 .unwrap()
                 .swap_bytes()
             ));
+
         output_string.push_str(&format!("\tEntry point address:               0x{:X}\n",
             self.get_e_entry_value()
                 .get_elf64_value()
                 .unwrap()
                 .swap_bytes()
             ));
-        output_string.push_str(&format!("\tStart of program headers:          {}\n",
+
+        output_string.push_str(&format!("\tStart of program headers:          {} (bytes into file)\n",
             self.get_e_phoff_value()
                 .get_elf64_value()
                 .unwrap()
                 .swap_bytes()
             ));
+
+        output_string.push_str(&format!("\tStart of section headers:          {} (bytes into file)\n",
+        self.get_e_shoff_value().get_elf64_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tSize of this header:               {} (bytes)\n",
+            self.get_e_ehsize_value().get_elf64_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tSize of program headers:           {} (bytes)\n",
+            self.get_e_phentsize_value().get_elf64_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tNumber of program headers:         {}\n",
+            self.get_e_phnum_value().get_elf64_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tSize of section headers:           {} (bytes)\n",
+            self.get_e_shentsize_value().get_elf64_value().unwrap().swap_bytes()));
+
+        output_string.push_str(&format!("\tNumber of section headers:         {}\n",
+            self.get_e_shnum_value().get_elf64_value().unwrap().swap_bytes()));
+
         output_string.push_str(&format!("\tSection header string table index: {}\n",
             self.get_e_shstrndx_value()
                 .get_elf64_value()
@@ -517,4 +602,22 @@ impl fmt::Display for Header<Elf64> {
 
         write!(f, "{}", output_string.to_string())
     }
+}
+
+//========================
+// Section Header structs =
+//==========================
+
+pub struct SectionHeader<Elf> {
+    pub sh_name:      Word,
+    pub sh_type:      Word,
+    pub sh_flags:     Word,
+    pub sh_addr:      Addr,
+    pub sh_offset:    Offset,
+    pub sh_size:      Word,
+    pub sh_link:      Word,
+    pub sh_info:      Word,
+    pub sh_addralign: Word,
+    pub sh_entsize:   Word,
+    _marker: marker::PhantomData<Elf>,
 }
