@@ -7,4 +7,3 @@ pub mod argument_parsing {
     pub path: std::path::PathBuf,
   }
 }
-

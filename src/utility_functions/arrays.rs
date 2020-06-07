@@ -2,7 +2,8 @@
 //TODO make these generic
 
 // Define a function to take in a slice and return a u32 number
-pub fn vec_slice_to_u16_array(slice: &[u8]) -> Option<u16> {
+
+pub fn vec_slice_to_u16(slice: &[u8]) -> Option<u16> {
 		if slice.len() != 2 {
 				return None;
 		}
@@ -14,7 +15,7 @@ pub fn vec_slice_to_u16_array(slice: &[u8]) -> Option<u16> {
 		return Some(sum);
 }
 
-pub fn vec_slice_to_u32_array(slice: &[u8]) -> Option<u32> {
+pub fn vec_slice_to_u32(slice: &[u8]) -> Option<u32> {
 		if slice.len() != 4 {
 				return None;
 		}
@@ -25,7 +26,7 @@ pub fn vec_slice_to_u32_array(slice: &[u8]) -> Option<u32> {
 		return Some(sum);
 }
 
-pub fn vec_slice_to_u64_array(slice: &[u8]) -> Option<u64> {
+pub fn vec_slice_to_u64(slice: &[u8]) -> Option<u64> {
 		if slice.len() != 8 {
 				return None;
 		}
@@ -35,3 +36,4 @@ pub fn vec_slice_to_u64_array(slice: &[u8]) -> Option<u64> {
 		}
 		return Some(sum);
 }
+

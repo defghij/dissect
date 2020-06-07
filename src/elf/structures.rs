@@ -5,8 +5,9 @@ use crate::utility_functions::arrays::*;
 use std::fmt;
 use std::marker;
 
-
-// traits
+//=======================
+// traits for type enums =
+//=========================
 trait Constructor {}
 trait Validate {
     fn is_constructable(bytes: &[u8]) -> bool;
